@@ -18,7 +18,7 @@
 #define RIL_INTERFACE_H
 
 #include <samsung_audio.h>
-#include <secril-client.h>
+#include "secril-client.h"
 
 /**
  * @brief The callback to change to wideband which should

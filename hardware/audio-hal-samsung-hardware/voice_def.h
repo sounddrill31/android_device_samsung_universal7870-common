@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef __EXYNOS_VOICE_DEF_H__
-#define __EXYNOS_VOICE_DEF_H__
+#ifndef __VOICE_DEF_H__
+#define __VOICE_DEF_H__
+
+#include <system/audio.h>
 
 // Voice
 
-static struct pcm_config pcm_config_voicecall = {
+struct pcm_config pcm_config_voicecall = {
     .channels = 2,
     .rate = 8000,
     .period_size = CAPTURE_PERIOD_SIZE_LOW_LATENCY,
@@ -27,7 +29,7 @@ static struct pcm_config pcm_config_voicecall = {
     .format = PCM_FORMAT_S16_LE,
 };
 
-static struct pcm_config pcm_config_voicecall_wideband = {
+struct pcm_config pcm_config_voicecall_wideband = {
     .channels = 2,
     .rate = 16000,
     .period_size = CAPTURE_PERIOD_SIZE_LOW_LATENCY,
@@ -51,4 +53,4 @@ struct pcm_config pcm_config_voice_sco_wb = {
     .format = PCM_FORMAT_S16_LE,
 };
 
-#endif  // __EXYNOS_AUDIOHAL_DEF_H__
+#endif  // __VOICE_DEF_H__

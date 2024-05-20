@@ -1,4 +1,4 @@
-# Copyright (C) 2017 The LineageOS Project
+# Copyright (C) 2017-2024 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,12 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_ARM_MODE := arm
-
 LOCAL_SRC_FILES := \
 	audience.c \
 	audio_hw.c \
 	compress_offload.c \
 	ril_interface.c \
-	voice.c \
-	audio_route.c
+	voice.c
 
 # TODO: remove resampler if possible when AudioFlinger supports downsampling from 48 to 8
 LOCAL_SHARED_LIBRARIES := \
@@ -34,13 +31,20 @@ LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	libaudioutils \
 	libhardware \
+	libprocessgroup \
 	libtinyalsa \
 	libtinycompress \
 	libaudioroute \
-	libdl \
-	libsecril-client \
-	libexpat
-
+	libdl
+		
+ifeq ($(BOARD_USE_VNDSECRIL), true)
+# newer properitary version with extra oem functions oss impl lacks
+LOCAL_SHARED_LIBRARIES += \
+	libvndsecril-client
+else
+LOCAL_SHARED_LIBRARIES += \
+	libsecril-client
+endif
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/include \
@@ -50,13 +54,22 @@ LOCAL_C_INCLUDES += \
 	hardware/samsung/ril/libsecril-client \
 	$(call include-path-for, audio-utils) \
 	$(call include-path-for, audio-route) \
-	$(call include-path-for, audio-effects) \
-	external/expat/lib
+	$(call include-path-for, audio-effects)
+
+ifeq ($(BOARD_USE_SPKAMP), true)
+LOCAL_CFLAGS += -DSUPPORT_SPKAMP
+endif
+
+# TODO: add support for soundtrigger q impl
+ifeq ($(BOARD_USE_SOUNDTRIGGER_HAL_EXYNOS),true)
+LOCAL_CFLAGS += -DSUPPORT_STHAL_INTERFACE
+endif
 
 LOCAL_CFLAGS := -Werror -Wall
 LOCAL_CFLAGS += -DPREPROCESSING_ENABLED
 
 LOCAL_MODULE := audio.primary.$(TARGET_BOOTLOADER_BOARD_NAME)
+LOCAL_MULTILIB := 32
 LOCAL_VENDOR_MODULE := true
 LOCAL_MODULE_RELATIVE_PATH := hw
 

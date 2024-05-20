@@ -32,7 +32,7 @@
 #include <samsung_audio.h>
 
 #include "audio_hw.h"
-#include "audio_voice_def.h"
+#include "voice_def.h"
 #include "voice.h"
 
 #ifdef AUDIENCE_EARSMART_IC

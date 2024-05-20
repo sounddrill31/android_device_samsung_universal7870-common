@@ -84,13 +84,37 @@ PRODUCT_PACKAGES += \
     audio.a2dp.default \
     audio.usb.default \
     audio.r_submix.default \
-    libaudioroute \
     libtinyalsa \
     libtinycompress
 
+ifeq ($(TARGET_DEVICE_HAS_TFA_SEC_AUDIO_HAL),true)
+#PRODUCT_PACKAGES += \
+#    libaudioroute_sec_helper
+else ifeq ($(TARGET_DEVICE_HAS_SEC_AUDIO_HAL),true)
+#PRODUCT_PACKAGES += \
+#    libaudioroute_sec_helper    
+else
+ifeq ($(TARGET_DEVICE_HAS_OSS_AUDIO_HAL),true)
+PRODUCT_PACKAGES += \
+    audio.primary.exynos7870
+ifeq ($(TARGET_DEVICE_HAS_TFA_AMP),true)
+PRODUCT_PACKAGES += \
+    audio_amplifier.exynos7870 \
+    libtfa98xx
+endif
+endif
+endif
+
 # Audio configuration
+ifeq ($(TARGET_DEVICE_HAS_OSS_AUDIO_HAL),true)
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
+    $(LOCAL_PATH)/configs/audio/audio_policy_configuration_oss.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
+else
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
+endif
+
+PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \
     frameworks/av/services/audiopolicy/config/a2dp_in_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_in_audio_policy_configuration.xml \
     frameworks/av/services/audiopolicy/config/bluetooth_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth_audio_policy_configuration.xml \
