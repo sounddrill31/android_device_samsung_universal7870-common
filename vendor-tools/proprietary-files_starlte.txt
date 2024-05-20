@@ -1,24 +1,5 @@
+###FILE###:proprietary-files_starlte_radio.txt
 # G960FXXUHFVG4
-
-# AptX - from crosshatch - QP1A.190711.020
-# product/lib64/libaptX_encoder.so|df1c89d7af1bb35808d5fe3496b04ba066c10cbc
-
-# mcRegistry
--vendor/lib/liboemcrypto.so
-
-# DRM - Widevine
--vendor/lib/libwvhidl.so
--vendor/lib/mediadrm/libwvdrmengine.so
--vendor/lib/mediadrm/libdrmclearkeyplugin.so
--vendor/lib64/mediadrm/libdrmclearkeyplugin.so
-vendor/etc/init/android.hardware.drm@1.2-service.widevine.rc
-vendor/bin/hw/android.hardware.drm@1.2-service.widevine
-
-# DRM - Widevine key provisioning (unused)
-# vendor/bin/vendor.samsung.hardware.security.widevine.keyprovisioning@1.0-service
-# vendor/bin/wvkprov
-# vendor/etc/init/vendor.samsung.hardware.security.widevine.keyprovisioning@1.0-service.rc
-# vendor/lib64/vendor.samsung.hardware.security.widevine.keyprovisioning@1.0.so
 
 # VNDK
 -vendor/lib/libvkmanager_vendor.so
@@ -27,11 +8,6 @@ vendor/bin/hw/android.hardware.drm@1.2-service.widevine
 # libsecnativefeature
 -vendor/lib/libsecnativefeature.so
 -vendor/lib64/libsecnativefeature.so
-
-# libfloatingfeature
--vendor/lib/libfloatingfeature.so
--vendor/lib64/libfloatingfeature.so
-vendor/etc/floating_feature.xml
 
 # Radio
 -vendor/lib64/vendor.samsung.hardware.radio.bridge@2.0.so
@@ -70,4 +46,18 @@ vendor/etc/mtu-conf.xml
 
 # RIL Audio
 -vendor/lib/libaudio-ril.so
+
+
+
+###FILE###:proprietary-files_starlte.txt
+# G960FXXUHFVG4
+
+# AptX
+-system/system/lib64/libaptX_encoder.so:product/lib64/libaptX_encoder.so
+
+# libfloatingfeature
+-vendor/lib/libfloatingfeature.so
+-vendor/lib64/libfloatingfeature.so
+vendor/etc/floating_feature.xml
+
 
