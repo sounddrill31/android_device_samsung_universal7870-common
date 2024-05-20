@@ -24,8 +24,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
 	audio_hw.c \
-	sec/voice_manager.c \
-	audio_route.c
+	sec/voice_manager.c
 
 # inline libaudioroute for vendor support
 
@@ -55,6 +54,14 @@ LOCAL_SHARED_LIBRARIES := \
 #LOCAL_CFLAGS := -Werror -Wall
 #LOCAL_CFLAGS += -DPREPROCESSING_ENABLED
 #LOCAL_CFLAGS += -DHW_AEC_LOOPBACK
+
+ifeq ($(BOARD_USE_SPKAMP), true)
+LOCAL_CFLAGS += -DSUPPORT_SPKAMP
+endif
+
+ifeq ($(BOARD_USE_INTERNAL_BTSCO), true)
+LOCAL_CFLAGS += -DSUPPORT_INTERNAL_BTSCO
+endif
 
 LOCAL_MODULE := audio.primary.$(TARGET_BOOTLOADER_BOARD_NAME)
 LOCAL_MODULE_RELATIVE_PATH := hw

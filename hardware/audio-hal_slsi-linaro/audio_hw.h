@@ -25,6 +25,7 @@
 /* Definition of AudioHAL */
 #include <hardware/hardware.h>
 #include <hardware/audio.h>
+#include <hardware/audio_amplifier.h>
 #include <hardware/audio_alsaops.h>
 
 #include <system/audio.h>
@@ -41,7 +42,8 @@
 #include "sec/voice_manager.h"
 
 /* Mixer Path configuration file for working AudioHAL */
-#define VENDOR_MIXER_XML_PATH "/vendor/etc/mixer_paths_0.xml"
+#define VENDOR_MIXER_XML_PATH "/vendor/etc/mixer_paths.xml"
+
 /* Effect HAL and Visualizer library path for offload scenario */
 #define OFFLOAD_VISUALIZERHAL_PATH "/vendor/lib/soundfx/libexynosvisualizer.so"
 
@@ -143,6 +145,20 @@ typedef enum {
     DEVICE_MAX,
     DEVICE_CNT                   = DEVICE_MAX
 } device_type_t;
+
+#ifdef SUPPORT_SPKAMP
+/**
+ **  Speaker AMP loopback pcm nodes count
+ **/
+#define SPKAMP_SPEAKER_AND_HEADSET_COUNT    3
+#endif
+
+#ifdef SUPPORT_INTERNAL_BTSCO
+/**
+ **  BT MIC loopback pcm nodes count
+ **/
+#define BTMIC_LOOPBACK_COUNT    2
+#endif
 
 
 /**
@@ -357,6 +373,13 @@ struct audio_device {
     struct pcm *pcm_voice_rx;      // PCM Device for Voice Capture
     struct pcm *pcm_voice_tx;      // PCM Device for Voice Playback
     float voice_volume;
+    
+    #ifdef SUPPORT_SPKAMP
+    /* SPK Amp loopback PCM handles */
+    struct pcm *spkamp_loopout_pcminfo[SPKAMP_SPEAKER_AND_HEADSET_COUNT];
+    struct pcm_config spkamp_pcmconfig[SPKAMP_SPEAKER_AND_HEADSET_COUNT];
+    unsigned int spkamp_flags[SPKAMP_SPEAKER_AND_HEADSET_COUNT];
+    #endif
 
     /* BT-SCO */
     struct pcm *pcm_btsco_in;      // PCM Device for bt-sco Capture
@@ -366,6 +389,15 @@ struct audio_device {
     void *offload_visualizer_lib;
     int (*notify_start_output_tovisualizer)(audio_io_handle_t);
     int (*notify_stop_output_tovisualizer)(audio_io_handle_t);
+    
+    #ifdef SUPPORT_INTERNAL_BTSCO
+        /* MIC loopback PCM handles to support BT internal */
+        struct pcm *btmic_loop_pcminfo[BTMIC_LOOPBACK_COUNT];
+        struct pcm_config btmic_loop_pcmconfig[BTMIC_LOOPBACK_COUNT];
+        unsigned int btmic_loop_flags[BTMIC_LOOPBACK_COUNT];
+    #endif
+    
+
 };
 
 #define MAX_PATH_NAME_LEN 50

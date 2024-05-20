@@ -72,6 +72,14 @@ struct pcm_config pcm_config_deep_buffer = {
 //    .avail_min = DEEP_BUFFER_OUTPUT_PERIOD_SIZE,
 };
 
+struct pcm_config pcm_config_primary_capture = {
+    .channels = DEFAULT_INPUT_CHANNELS,
+    .rate = DEFAULT_INPUT_SAMPLING_RATE,
+    .period_size = PRIMARY_INPUT_PERIOD_SIZE,
+    .period_count = PRIMARY_INPUT_PERIOD_COUNT,
+    .format = PCM_FORMAT_S16_LE,
+};
+
 struct pcm_config pcm_config_audio_capture = {
     .channels = DEFAULT_INPUT_CHANNELS,
     .rate = DEFAULT_INPUT_SAMPLING_RATE,
@@ -167,5 +175,32 @@ char * device_path_table[DEVICE_CNT] = {
     [AUSAGE_MODE_WIFI_CALL]             = "media",
     [AUSAGE_MODE_NONE]                  = "none",
 };
+
+/**
+ ** Dummy read/wirte buffer size, used in scenarios where PCM data is not
+ ** sent from by AP side then this dummy buffer help to initiate controls configuration
+ **/
+#define RW_BUFFER_SIZE     1024
+
+#ifdef SUPPORT_SPKAMP
+/**
+** Speaker AMP fixed PCM nodes for loopback path
+**/
+unsigned int spkamp_sound_device[SPKAMP_SPEAKER_AND_HEADSET_COUNT][2] = {
+    [0] = {PRIMARY_SOUND_CARD, AMPSPK_SOUND_DEVICE},
+    [1] = {PRIMARY_SOUND_CARD, AMPSPK_MIXED_REC_DEVICE},
+    [2] = {PRIMARY_SOUND_CARD, AMPSPK_LOOPBACK_REC_DEVICE},
+};
+#endif
+
+#ifdef SUPPORT_INTERNAL_BTSCO
+/**
+** BT MIC fixed PCM nodes for loopback path
+**/
+unsigned int btmic_sound_device[BTMIC_LOOPBACK_COUNT][2] = {
+    [0] = {PRIMARY_SOUND_CARD, BTLOOP_SOUND_DEVICE},
+    [1] = {PRIMARY_SOUND_CARD, BTMIC_SOUND_DEVICE},
+};
+#endif
 
 #endif  // __EXYNOS_AUDIOHAL_DEF_H__
