@@ -5,7 +5,7 @@ COMMON_A7Y17LTE_PATH="/media/flominator/40810d67-1e17-42cc-8147-8500cdc3df4b/pho
 COMMON_M10LTE_PATH="/media/flominator/40810d67-1e17-42cc-8147-8500cdc3df4b/phoenix_firmware_dumper-main/Samfw.com_SM-M105F_BKD_M105FDDS4CVB1_fac"
 COMMON_STARLTE_PATH="/media/flominator/40810d67-1e17-42cc-8147-8500cdc3df4b/phoenix_firmware_dumper-main/SAMFW.COM_SM-G960F_DBT_G960FXXUHFVG4_fac"
 
-./../extract-files-3.sh \
+./../extract-files.sh \
 -pfs proprietary-files_a6lte.txt "${COMMON_A6LTE_PATH}" \
 -pfs proprietary-files_a7y17lte.txt "${COMMON_A7Y17LTE_PATH}" \
 -pfs proprietary-files_m10lte.txt "${COMMON_M10LTE_PATH}" \

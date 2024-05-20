@@ -383,7 +383,7 @@ for key in "${!INTERNAL_DEVICE_COMMON[@]}"; do
    # add f to rename/Invalidate the function
    #sed -i 's|audio_route_missing_ctl|audio_route_missing_ctf|g' "${BLOB_ROOT}/M10LTE_AUDIO/vendor/lib/libaudior7870.so"
 
-   "${PATCHELF}" --add-needed "libaudioroute_sec_helper.so" "${BLOB_ROOT_AUDIO_M10LTE}/vendor/lib/hw/audio.primary.exynos7870.so"
+   # "${PATCHELF}" --add-needed "libaudioroute_sec_helper.so" "${BLOB_ROOT_AUDIO_M10LTE}/vendor/lib/hw/audio.primary.exynos7870.so"
 
    # "${PATCHELF}" --add-needed "libtinyalsa_sec.so" "${BLOB_ROOT}/M10LTE_AUDIO/vendor/lib/hw/audio.primary.exynos7870.so"
 
