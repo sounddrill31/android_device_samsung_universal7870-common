@@ -594,8 +594,15 @@ for key in "${!INTERNAL_DEVICE_COMMON[@]}"; do
     # libsensorlistener.so
     # shim needed by camera
     "${PATCHELF}" --add-needed "libshim_sensorndkbridge.so" "${BLOB_ROOT_M10LTE}/vendor/lib/libsensorlistener.so"
+    fi
+    
+    if [[ "$COMMON_NAME" == a7y17lte ]]; then
+    BLOB_ROOT_A7Y17LTE="${!mk_root_varname}/proprietary"
+    echo "Patching files in: ${BLOB_ROOT_A7Y17LTE}"
 
-    # sed -i ''
+    # Replace protobuf with vndk29 compat libs for specified libs
+    "${PATCHELF}" --replace-needed libprotobuf-cpp-lite.so libprotobuf-cpp-lite-v29.so "${BLOB_ROOT_A7Y17LTE}/vendor/lib/libwvhidl.so"
+    "${PATCHELF}" --replace-needed libprotobuf-cpp-lite.so libprotobuf-cpp-lite-v29.so "${BLOB_ROOT_A7Y17LTE}/vendor/lib/mediadrm/libwvdrmengine.so"
     fi
 done
 
