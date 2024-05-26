@@ -56,11 +56,8 @@
 
 /* Unusupported
 #define SOUND_CAPTURE_LOOPBACK_AEC_DEVICE 1
-*/
-#ifdef SUPPORT_STHAL_INTERFACE
 #define SOUND_CAPTURE_HOTWORD_DEVICE 0
-#endif
-
+*/
 
 /*
  * If the device has stereo speakers and the speakers are arranged on

@@ -80,26 +80,6 @@ struct pcm_device_profile pcm_device_deep_buffer = {
          
 };*/
 
-#ifdef SUPPORT_STHAL_INTERFACE
-static struct pcm_device_profile pcm_device_hotword_streaming = {
-    .config = {
-        .channels = 1,
-        .rate = 16000,
-        .period_size = CAPTURE_PERIOD_SIZE,
-        .period_count = CAPTURE_PERIOD_COUNT,
-        .format = PCM_FORMAT_S16_LE,
-        .start_threshold = CAPTURE_START_THRESHOLD,
-        .stop_threshold = 0,
-        .silence_threshold = 0,
-        .avail_min = 0,
-    },
-    .card = SOUND_CARD,
-    .id = SOUND_CAPTURE_HOTWORD_DEVICE,
-    .type = PCM_HOTWORD_STREAMING,
-    .devices = AUDIO_DEVICE_IN_BUILTIN_MIC|AUDIO_DEVICE_IN_WIRED_HEADSET|AUDIO_DEVICE_IN_BACK_MIC
-};
-#endif
-
 struct pcm_device_profile pcm_device_capture = {
     .config = {
         .channels = CAPTURE_DEFAULT_CHANNEL_COUNT,
@@ -140,9 +120,6 @@ struct pcm_device_profile * const pcm_devices[] = {
     &pcm_device_playback,
     &pcm_device_capture,
     &pcm_device_capture_low_latency,
-#ifdef SUPPORT_STHAL_INTERFACE
-    &pcm_device_hotword_streaming,
-#endif
     NULL,
 };
 
@@ -152,9 +129,6 @@ const char * const use_case_table[AUDIO_USECASE_MAX] = {
     [USECASE_AUDIO_PLAYBACK_OFFLOAD] = "compress-offload-playback",
     [USECASE_AUDIO_PLAYBACK_DEEP_BUFFER] = "playback deep-buffer",
     [USECASE_AUDIO_CAPTURE] = "capture",
-#ifdef SUPPORT_STHAL_INTERFACE
-    [USECASE_AUDIO_CAPTURE_HOTWORD] = "capture-hotword",
-#endif
     [USECASE_VOICE_CALL] = "voice-call",
 };
 

@@ -52,20 +52,6 @@ struct effect_info_s {
 };
 #endif
 
-#ifdef __LP64__
-#define SOUND_TRIGGER_HAL_LIBRARY_PATH "/vendor/lib64/hw/sound_trigger.primary.exynos.so"
-#else
-#define SOUND_TRIGGER_HAL_LIBRARY_PATH "/vendor/lib/hw/sound_trigger.primary.exynos.so"
-#endif
-
-#ifdef SUPPORT_STHAL_INTERFACE
-#define STR(s) #s
-#define XSTR(s) STR(s)
-#define SOUND_TRIGGER_HAL_LIBRARY_PATH "/vendor/lib/hw/sound_trigger.primary.%s.so"
-#endif
-
-
-
 /* Sound devices specific to the platform
  * The DEVICE_OUT_* and DEVICE_IN_* should be mapped to these sound
  * devices to enable corresponding mixer paths
@@ -201,9 +187,7 @@ typedef enum {
 
     /* Capture usecases */
     USECASE_AUDIO_CAPTURE,
-#ifdef SUPPORT_STHAL_INTERFACE    
-    USECASE_AUDIO_CAPTURE_HOTWORD,
-#endif
+
     USECASE_VOICE_CALL,
     AUDIO_USECASE_MAX
 } audio_usecase_t;
@@ -237,9 +221,6 @@ typedef enum {
     PCM_PLAYBACK = 0x1,
     PCM_CAPTURE = 0x2,
     VOICE_CALL = 0x4,
-#ifdef SUPPORT_STHAL_INTERFACE    
-    PCM_HOTWORD_STREAMING = 0x8,
-#endif    
     PCM_CAPTURE_LOW_LATENCY = 0x10,
 } usecase_type_t;
 
@@ -262,9 +243,6 @@ struct pcm_device {
     struct pcm_device_profile* pcm_profile;
     struct pcm*                pcm;
     int                        status;
-#ifdef SUPPORT_STHAL_INTERFACE    
-    int sound_trigger_handle;
-#endif
 };
 
 struct stream_out {
@@ -430,13 +408,6 @@ struct audio_device {
     // stream mutex locked: the stream will load it atomically with a barrier and re-read it
     // with audio device mutex if needed
     volatile int32_t        echo_reference_generation;
-#endif
-
-#ifdef SUPPORT_STHAL_INTERFACE
-    void*                   sound_trigger_lib;
-    int                     (*sound_trigger_open_for_streaming)();
-    size_t                  (*sound_trigger_read_samples)(int, void*, size_t);
-    int                     (*sound_trigger_close_for_streaming)(int);
 #endif
 
     pthread_mutex_t         lock_inputs; /* see note below on mutex acquisition order */

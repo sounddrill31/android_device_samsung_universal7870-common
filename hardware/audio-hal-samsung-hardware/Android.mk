@@ -56,17 +56,12 @@ LOCAL_C_INCLUDES += \
 	$(call include-path-for, audio-route) \
 	$(call include-path-for, audio-effects)
 
+LOCAL_CFLAGS := -Werror -Wall
+LOCAL_CFLAGS += -DPREPROCESSING_ENABLED
+
 ifeq ($(BOARD_USE_SPKAMP), true)
 LOCAL_CFLAGS += -DSUPPORT_SPKAMP
 endif
-
-# TODO: add support for soundtrigger q impl
-ifeq ($(BOARD_USE_SOUNDTRIGGER_HAL_EXYNOS),true)
-LOCAL_CFLAGS += -DSUPPORT_STHAL_INTERFACE
-endif
-
-LOCAL_CFLAGS := -Werror -Wall
-LOCAL_CFLAGS += -DPREPROCESSING_ENABLED
 
 LOCAL_MODULE := audio.primary.$(TARGET_BOOTLOADER_BOARD_NAME)
 LOCAL_MULTILIB := 32

@@ -337,12 +337,10 @@ static int mixer_init(struct audio_device *adev)
                 }
             } while (mixer == NULL);
 
-            // Removed the dynamic formatting with card number
             strcpy(mixer_path, "/vendor/etc/mixer_paths.xml");
             if (access(mixer_path, F_OK) == -1) {
                 ALOGW("%s: Failed to open mixer paths from %s, retrying with legacy location",
                       __func__, mixer_path);
-                // Use a fixed path for legacy location as well
                 strcpy(mixer_path, "/system/etc/mixer_paths.xml");
                 if (access(mixer_path, F_OK) == -1) {
                     ALOGE("%s: Failed to load a mixer paths configuration, your system will crash",
@@ -732,6 +730,12 @@ static int enable_snd_device(struct audio_device *adev,
     if (snd_device_name == NULL)
         return -EINVAL;
 
+    if (snd_device == SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES) {
+        ALOGV("Request to enable combo device: enable individual devices\n");
+        enable_snd_device(adev, uc_info, SND_DEVICE_OUT_SPEAKER);
+        enable_snd_device(adev, uc_info, SND_DEVICE_OUT_HEADPHONES);
+        return 0;
+    }
     adev->snd_dev_ref_cnt[snd_device]++;
     if (adev->snd_dev_ref_cnt[snd_device] > 1) {
         ALOGV("%s: snd_device(%d: %s) is already active",
@@ -779,6 +783,13 @@ int disable_snd_device(struct audio_device *adev,
 
     if (snd_device_name == NULL)
         return -EINVAL;
+
+    if (snd_device == SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES) {
+        ALOGV("Request to disable combo device: disable individual devices\n");
+        disable_snd_device(adev, uc_info, SND_DEVICE_OUT_SPEAKER);
+        disable_snd_device(adev, uc_info, SND_DEVICE_OUT_HEADPHONES);
+        return 0;
+    }
 
     if (adev->snd_dev_ref_cnt[snd_device] <= 0) {
         ALOGE("%s: device ref cnt is already 0", __func__);
@@ -883,11 +894,7 @@ static int select_devices(struct audio_device *adev,
     struct stream_out *active_out;
 
     ALOGV("%s: usecase(%d)", __func__, uc_id);
-    
-#ifdef SUPPORT_STHAL_INTERFACE
-    if (uc_id == USECASE_AUDIO_CAPTURE_HOTWORD)
-    return 0;
-#endif
+
     usecase = get_usecase_from_type(adev, PCM_CAPTURE|VOICE_CALL);
     if (usecase != NULL) {
         active_input = (struct stream_in *)usecase->stream;
@@ -1991,24 +1998,7 @@ static int start_input_stream(struct stream_in *in)
           period_size %d", __func__, pcm_device->pcm_profile->card, pcm_device->pcm_profile->id,
           pcm_device->pcm_profile->config.channels,pcm_device->pcm_profile->config.rate,
           pcm_device->pcm_profile->config.format, pcm_device->pcm_profile->config.period_size);
-#ifdef SUPPORT_STHAL_INTERFACE
-    if (pcm_profile->type == PCM_HOTWORD_STREAMING) {
-        if (!adev->sound_trigger_open_for_streaming) {
-            ALOGE("%s: No handle to sound trigger HAL", __func__);
-            ret = -EIO;
-            goto error_open;
-        }
-        pcm_device->pcm = NULL;
-        pcm_device->sound_trigger_handle = adev->sound_trigger_open_for_streaming();
-        if (pcm_device->sound_trigger_handle <= 0) {
-            ALOGE("%s: Failed to open DSP for streaming", __func__);
-            ret = -EIO;
-            goto error_open;
-        }
-        ALOGV("Opened DSP successfully");
-    } else {
-        pcm_device->sound_trigger_handle = 0;
-#endif
+
     pcm_device->pcm = pcm_open(pcm_device->pcm_profile->card, pcm_device->pcm_profile->id,
                                    PCM_IN | PCM_MONOTONIC, &pcm_device->pcm_profile->config);
 
@@ -2019,9 +2009,6 @@ static int start_input_stream(struct stream_in *in)
         ret = -EIO;
         goto error_open;
     }
-#ifdef SUPPORT_STHAL_INTERFACE    
-    }
-#endif
 
     /* force read and proc buffer reallocation in case of frame size or
      * channel count change */
@@ -2135,18 +2122,9 @@ static int out_open_pcm_devices(struct stream_out *out)
     int ret = 0;
     int pcm_device_card;
     int pcm_device_id;
-#ifdef SUPPORT_STHAL_INTERFACE
-    struct audio_device *adev = out->dev;
-#endif
 
     list_for_each(node, &out->pcm_dev_list) {
         pcm_device = node_to_item(node, struct pcm_device, stream_list_node);
-#ifdef SUPPORT_STHAL_INTERFACE
-        if (pcm_device->sound_trigger_handle > 0) {
-            adev->sound_trigger_close_for_streaming(pcm_device->sound_trigger_handle);
-            pcm_device->sound_trigger_handle = 0;
-        }
-#endif
         pcm_device_card = pcm_device->pcm_profile->card;
         pcm_device_id = pcm_device->pcm_profile->id;
 
@@ -3101,21 +3079,13 @@ static int in_close_pcm_devices(struct stream_in *in)
 {
     struct pcm_device *pcm_device;
     struct listnode *node;
-#ifdef SUPPORT_STHAL_INTERFACE    
-    struct audio_device *adev = in->dev;
-#endif
 
     list_for_each(node, &in->pcm_dev_list) {
         pcm_device = node_to_item(node, struct pcm_device, stream_list_node);
         if (pcm_device) {
             if (pcm_device->pcm)
                 pcm_close(pcm_device->pcm);
-            pcm_device->pcm = NULL;
-#ifdef SUPPORT_STHAL_INTERFACE        
-        if (pcm_device->sound_trigger_handle > 0)
-                adev->sound_trigger_close_for_streaming(pcm_device->sound_trigger_handle);
-            pcm_device->sound_trigger_handle = 0;
-#endif            
+            pcm_device->pcm = NULL;           
        }
     }
     return 0;
@@ -3281,22 +3251,6 @@ static int in_set_gain(struct audio_stream_in *stream, float gain)
 
     return 0;
 }
-#ifdef SUPPORT_STHAL_INTERFACE
-static ssize_t read_bytes_from_dsp(struct stream_in *in, void* buffer,
-                                   size_t bytes)
-{
-    struct pcm_device *pcm_device;
-    struct audio_device *adev = in->dev;
-
-    pcm_device = node_to_item(list_head(&in->pcm_dev_list),
-                              struct pcm_device, stream_list_node);
-
-    if (pcm_device->sound_trigger_handle > 0)
-        return adev->sound_trigger_read_samples(pcm_device->sound_trigger_handle, buffer, bytes);
-    else
-        return 0;
-}
-#endif
 
 static ssize_t in_read(struct audio_stream_in *stream, void *buffer,
                        size_t bytes)
@@ -3351,13 +3305,6 @@ static ssize_t in_read(struct audio_stream_in *stream, void *buffer,
 false_alarm:
 
     if (!list_empty(&in->pcm_dev_list)) {
-#ifdef SUPPORT_STHAL_INTERFACE 
-        if (in->usecase == USECASE_AUDIO_CAPTURE_HOTWORD) {
-            bytes = read_bytes_from_dsp(in, buffer, bytes);
-            if (bytes > 0)
-                read_and_process_successful = true;
-        } else {
-#endif
        /*
         * Read PCM and:
         * - resample if needed
@@ -3367,9 +3314,6 @@ false_alarm:
         frames = read_and_process_frames(in, buffer, frames_rq);
         if (frames >= 0)
             read_and_process_successful = true;
-#ifdef SUPPORT_STHAL_INTERFACE            
-        }
-#endif
     }
 
     /*
@@ -4012,9 +3956,6 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     }
 
     usecase_type_t usecase_type = flags & AUDIO_INPUT_FLAG_FAST ?
-#ifdef SUPPORT_STHAL_INTERFACE
-               PCM_HOTWORD_STREAMING : flags & AUDIO_INPUT_FLAG_FAST ?
-#endif
                         PCM_CAPTURE_LOW_LATENCY : PCM_CAPTURE;
     pcm_profile = get_pcm_device(usecase_type, devices);
     if (pcm_profile == NULL && usecase_type == PCM_CAPTURE_LOW_LATENCY) {
@@ -4069,15 +4010,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
           __func__, config->sample_rate, audio_channel_count_from_in_mask(config->channel_mask));
     ALOGV("%s: actual sample rate: %d, actual channels: %d",
            __func__, in_get_sample_rate((const struct audio_stream *)in), in_get_channels((const struct audio_stream *)in));
-#ifdef SUPPORT_STHAL_INTERFACE           
-    if (source == AUDIO_SOURCE_HOTWORD) {
-        in->usecase = USECASE_AUDIO_CAPTURE_HOTWORD;
-    } else {
-#endif
     in->usecase = USECASE_AUDIO_CAPTURE;
-#ifdef SUPPORT_STHAL_INTERFACE 
-    }
-#endif
     in->usecase_type = usecase_type;
 
     pthread_mutex_init(&in->lock, (const pthread_mutexattr_t *) NULL);
@@ -4270,34 +4203,7 @@ static int adev_open(const hw_module_t *module, const char *name,
                                                         "visualizer_hal_stop_output");
         }
     }
-#ifdef SUPPORT_STHAL_INTERFACE   
-     if (access(SOUND_TRIGGER_HAL_LIBRARY_PATH, R_OK) == 0) {
-        adev->sound_trigger_lib = dlopen(SOUND_TRIGGER_HAL_LIBRARY_PATH, RTLD_NOW);
-        if (adev->sound_trigger_lib == NULL) {
-            ALOGE("%s: DLOPEN failed for %s", __func__, SOUND_TRIGGER_HAL_LIBRARY_PATH);
-        } else {
-            ALOGV("%s: DLOPEN successful for %s", __func__, SOUND_TRIGGER_HAL_LIBRARY_PATH);
-            adev->sound_trigger_open_for_streaming =
-                        (int (*)(void))dlsym(adev->sound_trigger_lib,
-                                                        "sound_trigger_open_for_streaming");
-            adev->sound_trigger_read_samples =
-                        (size_t (*)(int, void *, size_t))dlsym(adev->sound_trigger_lib,
-                                                        "sound_trigger_read_samples");
-            adev->sound_trigger_close_for_streaming =
-                        (int (*)(int))dlsym(adev->sound_trigger_lib,
-                                                        "sound_trigger_close_for_streaming");
-            if (!adev->sound_trigger_open_for_streaming ||
-                !adev->sound_trigger_read_samples ||
-                !adev->sound_trigger_close_for_streaming) {
-
-                ALOGE("%s: Error grabbing functions in %s", __func__, SOUND_TRIGGER_HAL_LIBRARY_PATH);
-                adev->sound_trigger_open_for_streaming = 0;
-                adev->sound_trigger_read_samples = 0;
-                adev->sound_trigger_close_for_streaming = 0;
-            }
-        }
-    }
-#endif
+    
     adev->voice.session = voice_session_init(adev);
     if (adev->voice.session == NULL) {
         ALOGE("%s: Failed to initialize voice session data", __func__);
