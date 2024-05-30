@@ -69,6 +69,10 @@ TARGET_LINUX_KERNEL_VERSION := 3.18
 # Kernel config
 TARGET_KERNEL_SOURCE := kernel/samsung/exynos7870
 
+# Kernel compiler
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-linux-android-
+KERNEL_TOOLCHAIN := $(abspath .)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin
+
 # HIDL
 DEVICE_MATRIX_FILE := $(LOCAL_PATH)/configs/compatibility_matrix.xml
 
